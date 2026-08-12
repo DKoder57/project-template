@@ -23,14 +23,21 @@ jobs:
         with:
           # Ajuste: versão do Node usada no projeto
           node-version: '20'
-          cache: 'npm'
+          # Modelo otimizado: sem cache de npm aqui de propósito - este
+          # workflow não roda `npm ci`/`npm install`, então não há nada
+          # pra essa cache acelerar (ver comentário abaixo).
 
-      # Ajuste (monorepo): se o package.json não estiver na raiz (ex: Jome
-      # Cargus), adicione em cada step abaixo:
+      # Modelo otimizado: `npm audit` lê só o package-lock.json (já vem do
+      # checkout) - não precisa de node_modules instalado pra funcionar.
+      # Testado: `npm audit` roda e detecta vulnerabilidades reais mesmo
+      # sem nenhum `npm ci`/`npm install` antes. Isso elimina o passo mais
+      # lento do workflow (baixar e instalar todas as dependências) só
+      # pra rodar uma auditoria que nem usa o node_modules.
+      #
+      # Ajuste (monorepo): se o package-lock.json não estiver na raiz (ex:
+      # Jome Cargus), adicione:
       #   working-directory: ./apps/nome-do-pacote
-      - name: Instalar dependências
-        run: npm ci
-
+      #
       # Ajuste: "high" é o nível mínimo de severidade reportado.
       # Use "critical" para ser menos rígido, ou "moderate" para ser mais.
       - name: Auditoria de dependências (nível high)
